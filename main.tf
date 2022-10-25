@@ -9,7 +9,7 @@ locals {
   main_set_values    = local.main_image != {} ? [{ name = "${local.main_pre_value}.repository", value = "${local.main_image.url}/${local.main_image.image}" }, { name = "${local.main_pre_value}.tag", value = local.main_image.tag }] : []
   kubectl_set_values = local.kubectl_image != {} ? [{ name = "${local.kubectl_pre_value}.repository", value = "${local.kubectl_image.url}/${local.kubectl_image.image}" }, { name = "${local.kubectl_pre_value}.tag", value = local.kubectl_image.tag }] : []
 
-  set_values = concat(var.set_values, local.main_set_values)
+  set_values = concat(var.set_values, local.main_set_values, local.kubectl_set_values)
 }
 
 resource "helm_release" "this" {
