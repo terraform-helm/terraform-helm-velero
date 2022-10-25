@@ -1,7 +1,7 @@
 locals {
   repo_regex    = "^(?:(?P<url>[^/]+))?(?:/(?P<image>[^:]*))??(?::(?P<tag>[^:]*))"
   main_image    = contains(keys(var.images), "main") ? regex(local.repo_regex, var.images.main) : {}
-  kubectl_image = contains(keys(var.images), "kubectl") ? regex(local.repo_regex, var.images.main) : {}
+  kubectl_image = contains(keys(var.images), "kubectl") ? regex(local.repo_regex, var.images.kubectl) : {}
 
   main_pre_value    = "image"
   kubectl_pre_value = "kubectl.image"
