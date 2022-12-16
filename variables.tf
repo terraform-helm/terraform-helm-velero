@@ -57,3 +57,15 @@ variable "set_sensitive_values" {
   type        = any
   default     = []
 }
+
+variable "repo_regex" {
+  description = "Repo regex to identifier different part of the string"
+  type        = string
+  default     = "^(?:(?P<url>[^/]+))?(?:/(?P<image>[^:]*))??(?::(?P<tag>[^:]*))"
+}
+
+variable "helm_config" {
+  description = "Map of helm config"
+  type        = map(any)
+  default     = {}
+}

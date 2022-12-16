@@ -1,46 +1,36 @@
 locals {
-  repo_regex    = "^(?:(?P<url>[^/]+))?(?:/(?P<image>[^:]*))??(?::(?P<tag>[^:]*))"
-  main_image    = contains(keys(var.images), "main") ? regex(local.repo_regex, var.images.main) : {}
-  kubectl_image = contains(keys(var.images), "kubectl") ? regex(local.repo_regex, var.images.kubectl) : {}
+  set_values = concat(var.set_values, module.main_image.set_values, module.kubectl_image.set_values)
 
-  main_pre_value    = "image"
-  kubectl_pre_value = "kubectl.image"
+  default_helm_config = {
+    name             = var.name
+    repository       = var.repository
+    chart            = var.chart
+    namespace        = var.namespace
+    create_namespace = var.create_namespace
+    version          = var.release_version
+    values           = var.values
+  }
 
-  main_set_values    = local.main_image != {} ? [{ name = "${local.main_pre_value}.repository", value = "${local.main_image.url}/${local.main_image.image}" }, { name = "${local.main_pre_value}.tag", value = local.main_image.tag }] : []
-  kubectl_set_values = local.kubectl_image != {} ? [{ name = "${local.kubectl_pre_value}.repository", value = "${local.kubectl_image.url}/${local.kubectl_image.image}" }, { name = "${local.kubectl_pre_value}.tag", value = local.kubectl_image.tag }] : []
-
-  set_values = concat(var.set_values, local.main_set_values, local.kubectl_set_values)
+  helm_config = merge(local.default_helm_config, var.helm_config)
 }
 
-resource "helm_release" "this" {
-  name             = var.name
-  repository       = var.repository
-  chart            = var.chart
-  namespace        = var.namespace
-  create_namespace = var.create_namespace
-  version          = var.release_version
+module "main_image" {
+  source     = "github.com/littlejo/terraform-helm-images-set-values"
+  repo_regex = var.repo_regex
+  repo_url   = var.images.main
+  pre_value  = "image"
+}
 
-  values = var.values
+module "kubectl_image" {
+  source     = "github.com/littlejo/terraform-helm-images-set-values"
+  repo_regex = var.repo_regex
+  repo_url   = var.images.kubectl
+  pre_value  = "kubectl.image"
+}
 
-  dynamic "set" {
-    iterator = each_item
-    for_each = local.set_values
-
-    content {
-      name  = each_item.value.name
-      value = each_item.value.value
-      type  = try(each_item.value.type, null)
-    }
-  }
-
-  dynamic "set_sensitive" {
-    iterator = each_item
-    for_each = var.set_sensitive_values
-
-    content {
-      name  = each_item.value.name
-      value = each_item.value.value
-      type  = try(each_item.value.type, null)
-    }
-  }
+module "helm" {
+  source               = "github.com/terraform-helm/terraform-helm?ref=0.1"
+  helm_config          = local.helm_config
+  set_values           = local.set_values
+  set_sensitive_values = var.set_sensitive_values
 }
