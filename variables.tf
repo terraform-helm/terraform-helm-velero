@@ -36,8 +36,14 @@ variable "release_version" {
 
 variable "images" {
   description = "Map of images"
-  type        = map(string)
-  default     = {}
+  type = object({
+    main    = optional(string)
+    kubectl = optional(string)
+  })
+  default = {
+    main    = null
+    kubectl = null
+  }
 }
 
 variable "values" {
